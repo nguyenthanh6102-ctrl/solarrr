@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>🔆 Tính công suất tiêu thụ điện chính xác</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,29 +15,23 @@
     h2 {
       text-align: center;
       color: #0077cc;
-      font-size: 2em;
     }
     label {
       font-weight: bold;
-      font-size: 1.1em;
+      font-size: 20px;
     }
-    input, select {
+    input, select, button {
       width: 100%;
-      padding: 14px 12px;
-      margin-bottom: 15px;
+      padding: 10px 12px;
+      margin: 8px 0;
       font-size: 20px;
       border-radius: 6px;
-      box-sizing: border-box;
     }
     button {
-      width: 100%;
-      padding: 16px;
       background-color: #0077cc;
       color: white;
       border: none;
-      font-size: 20px;
       cursor: pointer;
-      border-radius: 6px;
     }
     button:hover {
       background-color: #005fa3;
@@ -46,30 +39,20 @@
     .result {
       margin-top: 20px;
       background-color: #e6f5ff;
-      padding: 18px;
+      padding: 15px;
       border-radius: 5px;
-      font-size: 1.1em;
     }
     .hidden {
       display: none;
     }
-    @media (max-width: 700px) {
+
+    @media (max-width: 600px) {
       body {
         font-size: 22px;
-        padding: 10px;
-      }
-      h2 {
-        font-size: 1.4em;
-      }
-      label {
-        font-size: 1.15em;
       }
       input, select, button {
         font-size: 22px;
-        padding: 16px 12px;
-      }
-      .result {
-        font-size: 1.15em;
+        padding: 14px 16px;
       }
     }
   </style>
@@ -114,6 +97,29 @@
 
     <label for="sunHours">☀️ Số giờ nắng hiệu quả mỗi ngày:</label>
     <input type="number" id="sunHours" placeholder="VD: 4" min="1" step="0.1">
+
+    <div style="margin-top:18px; margin-bottom:10px;">
+      <label style="font-size:1.1em;display:flex;align-items:center;font-weight:bold;">
+        <input type="checkbox" id="hybridMode" style="width:28px;height:28px;margin-right:10px;" onchange="toggleBatteryOptions()">
+        <span style="display:flex;align-items:center;">
+          <span style="font-size:1.5em;margin-right:8px;">🔋</span>
+          <span>
+            Hybrid - Lưu trữ
+            <br>
+            <span style="font-size:0.95em;color:#0077cc;font-weight:normal;">
+              (Tích chọn nếu muốn hệ thống có pin lưu trữ điện sử dụng ban đêm)
+            </span>
+          </span>
+        </span>
+      </label>
+    </div>
+    <div id="batteryOptions" class="hidden">
+      <label for="batteryCapacity">🔋 Chọn công suất pin lưu trữ:</label>
+      <select id="batteryCapacity">
+        <option value="5">5 kWh</option>
+        <option value="14.4">14.4 kWh</option>
+      </select>
+    </div>
   </div>
 
   <button onclick="calculate()">📊 Tính toán</button>
@@ -151,6 +157,10 @@
       document.getElementById('moneySection').classList.toggle('hidden', mode !== 'money');
     }
 
+    function toggleBatteryOptions() {
+      document.getElementById('batteryOptions').classList.toggle('hidden', !document.getElementById('hybridMode').checked);
+    }
+
     function calculate() {
       const mode = document.getElementById('mode').value;
       let totalKwh = 0;
@@ -185,8 +195,8 @@
       }
       const nightPercent = 100 - dayPercent;
 
-      const dayHours = numMonths * 30 * 12;
-      const nightHours = numMonths * 30 * 12;
+      const dayHours = numMonths * 30 * 10;
+      const nightHours = numMonths * 30 * 14;
 
       const dayEnergy = totalKwh * (dayPercent / 100);
       const nightEnergy = totalKwh * (nightPercent / 100);
@@ -204,11 +214,29 @@
       const panelPower = parseFloat(document.getElementById('panelPower').value);
       const sunHours = parseFloat(document.getElementById('sunHours').value);
       let panelCountText = '';
+      let batteryText = '';
       if (!isNaN(panelPower) && panelPower > 0 && !isNaN(sunHours) && sunHours > 0) {
         const avgDayKwh = dayEnergy / (numMonths * 30);
-        const requiredWatt = avgDayKwh * 1000 / sunHours;
-        const panelCount = Math.ceil(requiredWatt / panelPower);
-        panelCountText = `<br>🔋 Cần khoảng <strong>${panelCount}</strong> tấm pin (${panelPower}W) để đáp ứng lượng điện tiêu thụ ban ngày.`;
+        let requiredWatt = avgDayKwh * 1000 / sunHours;
+        let panelCount = Math.ceil(requiredWatt / panelPower);
+
+        // Nếu chọn Hybrid-Lưu Trữ
+        if (document.getElementById('hybridMode').checked) {
+          const batteryKwh = parseFloat(document.getElementById('batteryCapacity').value);
+          // Tổng nhu cầu: điện ban ngày + lượng cần sạc đầy pin lưu trữ
+          const totalKwhNeed = avgDayKwh + batteryKwh;
+          requiredWatt = totalKwhNeed * 1000 / sunHours;
+          panelCount = Math.ceil(requiredWatt / panelPower);
+
+          // Tính số giờ dùng được buổi tối với pin lưu trữ
+          const avgNightKwh = nightEnergy / (numMonths * 30); // điện tiêu thụ ban đêm mỗi ngày
+          let nightHoursFromBattery = batteryKwh / kwhPerHourNight;
+          if (!isFinite(nightHoursFromBattery)) nightHoursFromBattery = 0;
+
+          batteryText = `<br>🔋 Pin lưu trữ <strong>${batteryKwh} kWh</strong> dùng được khoảng <strong>${nightHoursFromBattery.toFixed(1)}</strong> giờ buổi tối (nếu sạc đầy).`;
+        }
+
+        panelCountText = `<br>🔋 Cần khoảng <strong>${panelCount}</strong> tấm pin (${panelPower}W) để đáp ứng nhu cầu ban ngày${document.getElementById('hybridMode').checked ? ' và sạc đầy pin lưu trữ' : ''}.`;
       }
 
       document.getElementById('result').innerHTML = `
@@ -218,13 +246,9 @@
         🌙 Công suất trung bình ban đêm: <strong>${kwhPerHourNight.toFixed(3)} kWh/giờ</strong>
         ${recommendation}
         ${panelCountText}
+        ${batteryText}
       `;
     }
-
-    // Tự động cập nhật tỷ lệ ban đêm khi trang vừa load
-    window.onload = function() {
-      autoUpdateNightEnergy();
-    };
   </script>
 
 </body>
