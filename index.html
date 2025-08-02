@@ -214,6 +214,7 @@
       const panelPower = parseFloat(document.getElementById('panelPower').value);
       const sunHours = parseFloat(document.getElementById('sunHours').value);
       let panelCountText = '';
+      let totalPanelKwText = '';
       let batteryText = '';
       if (!isNaN(panelPower) && panelPower > 0 && !isNaN(sunHours) && sunHours > 0) {
         const avgDayKwh = dayEnergy / (numMonths * 30);
@@ -229,11 +230,27 @@
           panelCount = Math.ceil(requiredWatt / panelPower);
 
           // Tính số giờ dùng được buổi tối với pin lưu trữ
-          const avgNightKwh = nightEnergy / (numMonths * 30); // điện tiêu thụ ban đêm mỗi ngày
           let nightHoursFromBattery = batteryKwh / kwhPerHourNight;
           if (!isFinite(nightHoursFromBattery)) nightHoursFromBattery = 0;
 
-          batteryText = `<br>🔋 Pin lưu trữ <strong>${batteryKwh} kWh</strong> dùng được khoảng <strong>${nightHoursFromBattery.toFixed(1)}</strong> giờ buổi tối (nếu sạc đầy).`;
+          // Tính lượng điện dư ra để nạp cho pin lưu trữ mỗi ngày (KHÔNG nhân 20%)
+          const totalPanelKwhPerDay = panelCount * panelPower * sunHours / 1000;
+          const surplusKwhForBattery = totalPanelKwhPerDay - avgDayKwh;
+
+          // Tổng công suất pin trong 1 giờ (kWh)
+          const totalPanelKwPerHour = (panelCount * panelPower) / 1000;
+          // Công suất dùng ban ngày trong 1 giờ
+          const avgDayKwhPerHour = avgDayKwh / sunHours;
+          // Công suất dư để nạp pin trong 1 giờ
+          const surplusKwhPerHour = totalPanelKwPerHour - avgDayKwhPerHour;
+
+          batteryText = `<br>🔋 Pin lưu trữ <strong>${batteryKwh} kWh</strong> dùng được khoảng <strong>${nightHoursFromBattery.toFixed(1)}</strong> giờ buổi tối (nếu sạc đầy).<br>
+⚡ Công suất dư để nạp pin lưu trữ trong 1 giờ nắng: <strong>${surplusKwhPerHour.toFixed(2)} kWh</strong>`;
+        }
+
+        if (!isNaN(panelCount) && panelCount > 0 && !isNaN(panelPower) && panelPower > 0) {
+          const totalPanelKw = (panelCount * panelPower / 1000).toFixed(2);
+          totalPanelKwText = `<br>🧮 Tổng công suất lắp đặt: <strong>${panelPower}W × ${panelCount} tấm = ${totalPanelKw} kW</strong>`;
         }
 
         panelCountText = `<br>🔋 Cần khoảng <strong>${panelCount}</strong> tấm pin (${panelPower}W) để đáp ứng nhu cầu ban ngày${document.getElementById('hybridMode').checked ? ' và sạc đầy pin lưu trữ' : ''}.`;
@@ -246,6 +263,7 @@
         🌙 Công suất trung bình ban đêm: <strong>${kwhPerHourNight.toFixed(3)} kWh/giờ</strong>
         ${recommendation}
         ${panelCountText}
+        ${totalPanelKwText}
         ${batteryText}
       `;
     }
