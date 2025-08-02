@@ -97,14 +97,14 @@
     <label for="moneyInput">💵 Tổng tiền điện (VNĐ):</label>
     <input type="text" id="moneyInput" placeholder="VD: 1.200.000" oninput="formatNumber(this)">
     <label for="priceInput">💸 Giá điện (VNĐ/kWh):</label>
-    <input type="text" id="priceInput" placeholder="VD: 3.000" value="3.000" oninput="formatNumber(this)">
+    <input type="text" id="priceInput" placeholder="VD: 2.500" value="2.500" oninput="formatNumber(this)">
   </div>
 
   <label for="dayEnergyPercent">🌞 Tỷ lệ năng lượng tiêu thụ ban ngày (%):</label>
-  <input type="number" id="dayEnergyPercent" placeholder="VD: 70" min="0" max="100" oninput="autoUpdateNightEnergy()">
+  <input type="number" id="dayEnergyPercent" placeholder="VD: 50" min="0" max="100" value="50" oninput="autoUpdateNightEnergy()">
 
   <label for="nightEnergyPercent">🌙 Tỷ lệ năng lượng tiêu thụ ban đêm (%):</label>
-  <input type="number" id="nightEnergyPercent" disabled>
+  <input type="number" id="nightEnergyPercent" value="50" disabled>
 
   <input type="password" id="secret" placeholder="🔐 Nhập mật khẩu">
 
@@ -185,8 +185,8 @@
       }
       const nightPercent = 100 - dayPercent;
 
-      const dayHours = numMonths * 30 * 10;
-      const nightHours = numMonths * 30 * 14;
+      const dayHours = numMonths * 30 * 12;
+      const nightHours = numMonths * 30 * 12;
 
       const dayEnergy = totalKwh * (dayPercent / 100);
       const nightEnergy = totalKwh * (nightPercent / 100);
@@ -220,6 +220,11 @@
         ${panelCountText}
       `;
     }
+
+    // Tự động cập nhật tỷ lệ ban đêm khi trang vừa load
+    window.onload = function() {
+      autoUpdateNightEnergy();
+    };
   </script>
 
 </body>
