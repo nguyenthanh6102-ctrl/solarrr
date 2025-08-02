@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>🔆 Tính công suất tiêu thụ điện chính xác</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,28 +11,34 @@
       max-width: 650px;
       margin: auto;
       background-color: #f0faff;
+      font-size: 20px;
     }
     h2 {
       text-align: center;
       color: #0077cc;
+      font-size: 2em;
     }
     label {
       font-weight: bold;
+      font-size: 1.1em;
     }
     input, select {
       width: 100%;
-      padding: 10px;
+      padding: 14px 12px;
       margin-bottom: 15px;
-      font-size: 16px;
+      font-size: 20px;
+      border-radius: 6px;
+      box-sizing: border-box;
     }
     button {
       width: 100%;
-      padding: 12px;
+      padding: 16px;
       background-color: #0077cc;
       color: white;
       border: none;
-      font-size: 16px;
+      font-size: 20px;
       cursor: pointer;
+      border-radius: 6px;
     }
     button:hover {
       background-color: #005fa3;
@@ -39,30 +46,30 @@
     .result {
       margin-top: 20px;
       background-color: #e6f5ff;
-      padding: 15px;
+      padding: 18px;
       border-radius: 5px;
+      font-size: 1.1em;
     }
     .hidden {
       display: none;
     }
-    /* Tăng kích thước chữ và input cho mobile */
     @media (max-width: 700px) {
       body {
-        font-size: 20px;
+        font-size: 22px;
         padding: 10px;
       }
       h2 {
-        font-size: 1.5em;
+        font-size: 1.4em;
       }
       label {
-        font-size: 1.1em;
+        font-size: 1.15em;
       }
       input, select, button {
-        font-size: 20px;
-        padding: 14px 12px;
+        font-size: 22px;
+        padding: 16px 12px;
       }
       .result {
-        font-size: 1.1em;
+        font-size: 1.15em;
       }
     }
   </style>
