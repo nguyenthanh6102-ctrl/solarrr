@@ -4,17 +4,29 @@
   <meta charset="UTF-8">
   <title>🔆 Tính công suất tiêu thụ điện chính xác</title>
   <style>
+    html, body {
+      width: 100vw;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      background: #f0faff;
+    }
     body {
       font-family: Arial, sans-serif;
-      padding: 16px 2vw;
+      padding: 0 0 24px 0;
+      max-width: 100vw;
+      font-size: 20px;
+    }
+    .container {
       max-width: 650px;
       margin: auto;
-      background-color: #f0faff;
-      font-size: 20px;
+      padding: 16px 2vw;
     }
     h2 {
       text-align: center;
       color: #0077cc;
+      margin-top: 16px;
     }
     label {
       font-weight: bold;
@@ -43,113 +55,111 @@
       padding: 18px 10px;
       border-radius: 5px;
       font-size: 1.1em;
+      word-break: break-word;
     }
     .hidden {
       display: none;
     }
 
-    @media (max-width: 600px) {
-      body {
-        font-size: 22px;
-      }
-      input, select, button {
-        font-size: 22px;
-        padding: 14px 16px;
-      }
-    }
-    /* Tăng kích thước chữ và input cho mobile */
+    /* Responsive cho mobile */
     @media (max-width: 700px) {
-      body {
-        font-size: 24px;
-        padding: 2vw 1vw;
+      html, body {
+        font-size: 22px;
         max-width: 100vw;
+        padding: 0;
+      }
+      .container {
+        max-width: 100vw;
+        padding: 8px 2vw;
       }
       h2 {
-        font-size: 1.5em;
+        font-size: 1.2em;
+        margin-top: 8px;
       }
       label {
-        font-size: 1.18em;
+        font-size: 1.08em;
       }
       input, select, button {
-        font-size: 24px;
-        padding: 18px 12px;
-        margin: 12px 0;
+        font-size: 22px;
+        padding: 14px 8px;
+        margin: 10px 0;
       }
       .result {
-        font-size: 1.18em;
-        padding: 16px 4px;
+        font-size: 1.08em;
+        padding: 12px 2px;
       }
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <h2>🔌 Tính công suất điện theo thời điểm sử dụng</h2>
 
-  <h2>🔌 Tính công suất điện theo thời điểm sử dụng</h2>
+    <label for="mode">Chọn cách nhập liệu:</label>
+    <select id="mode" onchange="switchMode()">
+      <option value="kwh">🔋 Nhập kWh điện (1–3 tháng)</option>
+      <option value="money">💰 Nhập tiền điện và giá điện</option>
+    </select>
 
-  <label for="mode">Chọn cách nhập liệu:</label>
-  <select id="mode" onchange="switchMode()">
-    <option value="kwh">🔋 Nhập kWh điện (1–3 tháng)</option>
-    <option value="money">💰 Nhập tiền điện và giá điện</option>
-  </select>
+    <div id="kwhSection">
+      <label for="kwh1">🔌 Tổng kWh tháng gần nhất:</label>
+      <input type="text" id="kwh1" placeholder="VD: 500" oninput="formatNumber(this)">
+      <label for="kwh2">🔌 Tháng thứ 2 (nếu có):</label>
+      <input type="text" id="kwh2" placeholder="VD: 480" oninput="formatNumber(this)">
+      <label for="kwh3">🔌 Tháng thứ 3 (nếu có):</label>
+      <input type="text" id="kwh3" placeholder="VD: 470" oninput="formatNumber(this)">
+    </div>
 
-  <div id="kwhSection">
-    <label for="kwh1">🔌 Tổng kWh tháng gần nhất:</label>
-    <input type="text" id="kwh1" placeholder="VD: 500" oninput="formatNumber(this)">
-    <label for="kwh2">🔌 Tháng thứ 2 (nếu có):</label>
-    <input type="text" id="kwh2" placeholder="VD: 480" oninput="formatNumber(this)">
-    <label for="kwh3">🔌 Tháng thứ 3 (nếu có):</label>
-    <input type="text" id="kwh3" placeholder="VD: 470" oninput="formatNumber(this)">
-  </div>
+    <div id="moneySection" class="hidden">
+      <label for="moneyInput">💵 Tổng tiền điện (VNĐ):</label>
+      <input type="text" id="moneyInput" placeholder="VD: 1.200.000" oninput="formatNumber(this)">
+      <label for="priceInput">💸 Giá điện (VNĐ/kWh):</label>
+      <input type="text" id="priceInput" placeholder="VD: 2.500" value="2.500" oninput="formatNumber(this)">
+    </div>
 
-  <div id="moneySection" class="hidden">
-    <label for="moneyInput">💵 Tổng tiền điện (VNĐ):</label>
-    <input type="text" id="moneyInput" placeholder="VD: 1.200.000" oninput="formatNumber(this)">
-    <label for="priceInput">💸 Giá điện (VNĐ/kWh):</label>
-    <input type="text" id="priceInput" placeholder="VD: 2.500" value="2.500" oninput="formatNumber(this)">
-  </div>
+    <label for="dayEnergyPercent">🌞 Tỷ lệ năng lượng tiêu thụ ban ngày (%):</label>
+    <input type="number" id="dayEnergyPercent" placeholder="VD: 50" min="0" max="100" value="50" oninput="autoUpdateNightEnergy()">
 
-  <label for="dayEnergyPercent">🌞 Tỷ lệ năng lượng tiêu thụ ban ngày (%):</label>
-  <input type="number" id="dayEnergyPercent" placeholder="VD: 50" min="0" max="100" value="50" oninput="autoUpdateNightEnergy()">
+    <label for="nightEnergyPercent">🌙 Tỷ lệ năng lượng tiêu thụ ban đêm (%):</label>
+    <input type="number" id="nightEnergyPercent" value="50" disabled>
 
-  <label for="nightEnergyPercent">🌙 Tỷ lệ năng lượng tiêu thụ ban đêm (%):</label>
-  <input type="number" id="nightEnergyPercent" value="50" disabled>
+    <input type="password" id="secret" placeholder="🔐 Nhập mật khẩu">
 
-  <input type="password" id="secret" placeholder="🔐 Nhập mật khẩu">
+    <div id="advancedInputs" class="hidden">
+      <label for="panelPower">🔆 Công suất 1 tấm pin (W):</label>
+      <input type="number" id="panelPower" placeholder="VD: 550">
 
-  <div id="advancedInputs" class="hidden">
-    <label for="panelPower">🔆 Công suất 1 tấm pin (W):</label>
-    <input type="number" id="panelPower" placeholder="VD: 550">
+      <label for="sunHours">☀️ Số giờ nắng hiệu quả mỗi ngày:</label>
+      <input type="number" id="sunHours" placeholder="VD: 4" min="1" step="0.1">
 
-    <label for="sunHours">☀️ Số giờ nắng hiệu quả mỗi ngày:</label>
-    <input type="number" id="sunHours" placeholder="VD: 4" min="1" step="0.1">
-
-    <div style="margin-top:18px; margin-bottom:10px;">
-      <label style="font-size:1.1em;display:flex;align-items:center;font-weight:bold;">
-        <input type="checkbox" id="hybridMode" style="width:28px;height:28px;margin-right:10px;" onchange="toggleBatteryOptions()">
-        <span style="display:flex;align-items:center;">
-          <span style="font-size:1.5em;margin-right:8px;">🔋</span>
-          <span>
-            Hybrid - Lưu trữ
-            <br>
-            <span style="font-size:0.95em;color:#0077cc;font-weight:normal;">
-              (Tích chọn nếu muốn hệ thống có pin lưu trữ điện sử dụng ban đêm)
+      <div style="margin-top:18px; margin-bottom:10px;">
+        <label style="font-size:1.1em;display:flex;align-items:center;font-weight:bold;">
+          <input type="checkbox" id="hybridMode" style="width:28px;height:28px;margin-right:10px;" onchange="toggleBatteryOptions()">
+          <span style="display:flex;align-items:center;">
+            <span style="font-size:1.5em;margin-right:8px;">🔋</span>
+            <span>
+              Hybrid - Lưu trữ
+              <br>
+              <span style="font-size:0.95em;color:#0077cc;font-weight:normal;">
+                (Tích chọn nếu muốn hệ thống có pin lưu trữ điện sử dụng ban đêm)
+              </span>
             </span>
           </span>
-        </span>
-      </label>
+        </label>
+      </div>
+      <div id="batteryOptions" class="hidden">
+        <label for="batteryCapacity">🔋 Chọn công suất pin lưu trữ:</label>
+        <select id="batteryCapacity">
+          <option value="5">5 kWh</option>
+          <option value="14.4">14.4 kWh</option>
+        </select>
+      </div>
     </div>
-    <div id="batteryOptions" class="hidden">
-      <label for="batteryCapacity">🔋 Chọn công suất pin lưu trữ:</label>
-      <select id="batteryCapacity">
-        <option value="5">5 kWh</option>
-        <option value="14.4">14.4 kWh</option>
-      </select>
-    </div>
+
+    <button onclick="calculate()">📊 Tính toán</button>
+
+    <div class="result" id="result"></div>
   </div>
-
-  <button onclick="calculate()">📊 Tính toán</button>
-
-  <div class="result" id="result"></div>
 
   <script>
     document.getElementById('secret').addEventListener('input', function() {
