@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>🔆 Tính công suất tiêu thụ điện chính xác</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      max-width: 650px;
+      margin: auto;
+      background-color: #f0faff;
+    }
+    h2 {
+      text-align: center;
+      color: #0077cc;
+    }
+    label {
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #0077cc;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005fa3;
+    }
+    .result {
+      margin-top: 20px;
+      background-color: #e6f5ff;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🔌 Tính công suất điện theo thời điểm sử dụng</h2>
+
+  <label for="mode">Chọn cách nhập liệu:</label>
+  <select id="mode" onchange="switchMode()">
+    <option value="kwh">🔋 Nhập kWh điện (1–3 tháng)</option>
+    <option value="money">💰 Nhập tiền điện và giá điện</option>
+  </select>
+
+  <div id="kwhSection">
+    <label for="kwh1">🔌 Tổng kWh tháng gần nhất:</label>
+    <input type="text" id="kwh1" placeholder="VD: 500" oninput="formatNumber(this)">
+    <label for="kwh2">🔌 Tháng thứ 2 (nếu có):</label>
+    <input type="text" id="kwh2" placeholder="VD: 480" oninput="formatNumber(this)">
+    <label for="kwh3">🔌 Tháng thứ 3 (nếu có):</label>
+    <input type="text" id="kwh3" placeholder="VD: 470" oninput="formatNumber(this)">
+  </div>
+
+  <div id="moneySection" class="hidden">
+    <label for="moneyInput">💵 Tổng tiền điện (VNĐ):</label>
+    <input type="text" id="moneyInput" placeholder="VD: 1.200.000" oninput="formatNumber(this)">
+    <label for="priceInput">💸 Giá điện (VNĐ/kWh):</label>
+    <input type="text" id="priceInput" placeholder="VD: 3.000" value="3.000" oninput="formatNumber(this)">
+  </div>
+
+  <label for="dayEnergyPercent">🌞 Tỷ lệ năng lượng tiêu thụ ban ngày (%):</label>
+  <input type="number" id="dayEnergyPercent" placeholder="VD: 70" min="0" max="100" oninput="autoUpdateNightEnergy()">
+
+  <label for="nightEnergyPercent">🌙 Tỷ lệ năng lượng tiêu thụ ban đêm (%):</label>
+  <input type="number" id="nightEnergyPercent" disabled>
+
+  <input type="password" id="secret" placeholder="🔐 Nhập mật khẩu">
+
+  <div id="advancedInputs" class="hidden">
+    <label for="panelPower">🔆 Công suất 1 tấm pin (W):</label>
+    <input type="number" id="panelPower" placeholder="VD: 550">
+
+    <label for="sunHours">☀️ Số giờ nắng hiệu quả mỗi ngày:</label>
+    <input type="number" id="sunHours" placeholder="VD: 4" min="1" step="0.1">
+  </div>
+
+  <button onclick="calculate()">📊 Tính toán</button>
+
+  <div class="result" id="result"></div>
+
+  <script>
+    document.getElementById('secret').addEventListener('input', function() {
+      const value = this.value.trim().toUpperCase();
+      document.getElementById('advancedInputs').classList.toggle('hidden', value !== 'GP');
+    });
+
+    function unformatNumber(str) {
+      return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+    }
+
+    function formatNumber(el) {
+      let num = el.value.replace(/\D/g, '');
+      if (!num) {
+        el.value = '';
+        return;
+      }
+      el.value = parseInt(num).toLocaleString('vi-VN');
+    }
+
+    function autoUpdateNightEnergy() {
+      const day = parseFloat(document.getElementById('dayEnergyPercent').value);
+      const night = isNaN(day) ? '' : (100 - day);
+      document.getElementById('nightEnergyPercent').value = night;
+    }
+
+    function switchMode() {
+      const mode = document.getElementById('mode').value;
+      document.getElementById('kwhSection').classList.toggle('hidden', mode !== 'kwh');
+      document.getElementById('moneySection').classList.toggle('hidden', mode !== 'money');
+    }
+
+    function calculate() {
+      const mode = document.getElementById('mode').value;
+      let totalKwh = 0;
+      let numMonths = 0;
+
+      if (mode === 'kwh') {
+        const kwhValues = [unformatNumber(document.getElementById('kwh1').value),
+                           unformatNumber(document.getElementById('kwh2').value),
+                           unformatNumber(document.getElementById('kwh3').value)];
+        const validKwh = kwhValues.filter(val => !isNaN(val) && val > 0);
+        if (validKwh.length === 0) {
+          alert("Bạn cần nhập ít nhất 1 tháng số kWh.");
+          return;
+        }
+        totalKwh = validKwh.reduce((a, b) => a + b, 0) / validKwh.length;
+        numMonths = validKwh.length;
+      } else if (mode === 'money') {
+        const money = unformatNumber(document.getElementById('moneyInput').value);
+        const price = unformatNumber(document.getElementById('priceInput').value);
+        if (isNaN(money) || isNaN(price) || price <= 0) {
+          alert("Vui lòng nhập đúng số tiền điện và giá điện.");
+          return;
+        }
+        totalKwh = money / price;
+        numMonths = 1;
+      }
+
+      const dayPercent = parseFloat(document.getElementById('dayEnergyPercent').value);
+      if (isNaN(dayPercent) || dayPercent < 0 || dayPercent > 100) {
+        alert("Tỷ lệ ban ngày phải nằm trong khoảng 0–100%.");
+        return;
+      }
+      const nightPercent = 100 - dayPercent;
+
+      const dayHours = numMonths * 30 * 24;
+      const nightHours = numMonths * 30 * 24;
+
+      const dayEnergy = totalKwh * (dayPercent / 100);
+      const nightEnergy = totalKwh * (nightPercent / 100);
+
+      const kwhPerHourDay = dayEnergy / dayHours;
+      const kwhPerHourNight = nightEnergy / nightHours;
+
+      let recommendation = '';
+      if (kwhPerHourDay > kwhPerHourNight) {
+        recommendation = '<br>🔆 Gợi ý: Nên dùng <strong>hệ hoà lưới</strong> (ban ngày tiêu thụ nhiều).';
+      } else {
+        recommendation = '<br>🌙 Gợi ý: Nên dùng <strong>hệ lưu trữ</strong> (ban đêm tiêu thụ nhiều).';
+      }
+
+      const panelPower = parseFloat(document.getElementById('panelPower').value);
+      const sunHours = parseFloat(document.getElementById('sunHours').value);
+      let panelCountText = '';
+      if (!isNaN(panelPower) && panelPower > 0 && !isNaN(sunHours) && sunHours > 0) {
+        const avgDayKwh = dayEnergy / (numMonths * 30);
+        const requiredWatt = avgDayKwh * 1000 / sunHours;
+        const panelCount = Math.ceil(requiredWatt / panelPower);
+        panelCountText = `<br>🔋 Cần khoảng <strong>${panelCount}</strong> tấm pin (${panelPower}W) để đáp ứng lượng điện tiêu thụ ban ngày.`;
+      }
+
+      document.getElementById('result').innerHTML = `
+        <strong>🔍 Kết quả:</strong><br>
+        ➤ Tổng điện trung bình: <strong>${totalKwh.toFixed(2)} kWh</strong><br>
+        🌞 Công suất trung bình ban ngày: <strong>${kwhPerHourDay.toFixed(3)} kWh/giờ</strong><br>
+        🌙 Công suất trung bình ban đêm: <strong>${kwhPerHourNight.toFixed(3)} kWh/giờ</strong>
+        ${recommendation}
+        ${panelCountText}
+      `;
+    }
+  </script>
+
+</body>
+</html>
