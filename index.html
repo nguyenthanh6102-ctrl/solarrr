@@ -106,10 +106,10 @@
     <label for="mode">Chọn cách nhập liệu:</label>
     <select id="mode" onchange="switchMode()">
       <option value="kwh">🔋 Nhập kWh điện (1–3 tháng)</option>
-      <option value="money">💰 Nhập tiền điện và giá điện</option>
+      <option value="money" selected>💰 Nhập tiền điện và giá điện</option>
     </select>
 
-    <div id="kwhSection">
+    <div id="kwhSection" class="hidden">
       <label for="kwh1">🔌 Tổng kWh tháng gần nhất:</label>
       <input type="text" id="kwh1" placeholder="VD: 500" oninput="formatNumber(this)">
       <label for="kwh2">🔌 Tháng thứ 2 (nếu có):</label>
@@ -118,7 +118,7 @@
       <input type="text" id="kwh3" placeholder="VD: 470" oninput="formatNumber(this)">
     </div>
 
-    <div id="moneySection" class="hidden">
+    <div id="moneySection">
       <label for="moneyInput">💵 Tổng tiền điện (VNĐ):</label>
       <input type="text" id="moneyInput" placeholder="VD: 1.200.000" oninput="formatNumber(this)">
       <label for="priceInput">💸 Giá điện (VNĐ/kWh):</label>
@@ -287,13 +287,10 @@
 
         if (!isNaN(panelCount) && panelCount > 0 && !isNaN(panelPower) && panelPower > 0) {
           const panelCountWith20 = Math.ceil(panelCount * 1.2);
-          const totalPanelKw = ((panelCount * panelPower) / 1000).toFixed(2);
           const totalPanelKwWith20 = ((panelCountWith20 * panelPower) / 1000).toFixed(2);
-          totalPanelKwText = `<br>🧮 Tổng công suất lắp đặt: <strong>${panelPower}W × ${panelCount} tấm = ${totalPanelKw} kW</strong>
-  <br>🧮 Tổng công suất lắp đặt cần thiết (+20%): <strong>${panelPower}W × ${panelCountWith20} tấm = ${totalPanelKwWith20} kW</strong>`;
+          totalPanelKwText = `<br>🧮 Tổng công suất lắp đặt cần thiết (+20%): <strong>${panelPower}W × ${panelCountWith20} tấm = ${totalPanelKwWith20} kW</strong>`;
+          panelCountText = `<br>🔋 Cần khoảng <strong>${panelCountWith20}</strong> tấm pin (${panelPower}W) để đáp ứng nhu cầu sử dụng (đã cộng thêm 20% công suất).`;
         }
-
-        panelCountText = `<br>🔋 Cần khoảng <strong>${panelCount}</strong> tấm pin (${panelPower}W) để đáp ứng nhu cầu ban ngày${document.getElementById('hybridMode').checked ? ' và sạc đầy pin lưu trữ' : ''}.`;
       }
 
       document.getElementById('result').innerHTML = `
@@ -307,6 +304,10 @@
         ${batteryText}
       `;
     }
+
+    window.onload = function() {
+      switchMode();
+    };
   </script>
 
 </body>
